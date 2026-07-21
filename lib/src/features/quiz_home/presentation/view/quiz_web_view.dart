@@ -1,44 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:webquiz/src/design_system/design_system.dart';
-
-part 'quiz_web_view.g.dart';
-
-/// A model class representing a quiz question.
-class QuizQuestion {
-  /// Creates a [QuizQuestion].
-  const QuizQuestion({
-    required this.id,
-    required this.questionText,
-    required this.options,
-    required this.explanation,
-  });
-
-  /// The question number.
-  final int id;
-
-  /// The text of the question.
-  final String questionText;
-
-  /// The list of multiple choice options.
-  final List<String> options;
-
-  /// The explanation for the question answer.
-  final String explanation;
-}
-
-/// A notifier that manages the application's theme mode state.
-@riverpod
-class ThemeModeNotifier extends _$ThemeModeNotifier {
-  @override
-  ThemeMode build() => ThemeMode.light;
-
-  /// Toggles between light and dark theme modes.
-  void toggle() {
-    state = state == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
-  }
-}
+import 'package:webquiz/src/features/quiz_home/presentation/controller/quiz_notifier.dart';
+import 'package:webquiz/src/features/quiz_home/presentation/controller/theme_notifier.dart';
 
 /// The home view of the quiz application designed for web interfaces.
 class QuizWebView extends ConsumerStatefulWidget {
@@ -50,48 +14,26 @@ class QuizWebView extends ConsumerStatefulWidget {
 }
 
 class _QuizWebViewState extends ConsumerState<QuizWebView> {
-  int _currentQuestionIndex = 0;
-
-  final List<QuizQuestion> _questions = const [
-    QuizQuestion(
-      id: 1,
-      questionText:
-          'A train passes a station platform in 36 seconds and a man standing on the platform in 20 seconds. If the speed of the train is 54 km/hr, what is the length of the platform?',
-      options: ['120 m', '240 m', '300 m', 'None of these'],
-      explanation:
-          'A train passes a station platform in 36 seconds and a man standing on the platform in 20 seconds. If the speed of the train is 54 km/hr, what is the length of the platform?',
-    ),
-    QuizQuestion(
-      id: 2,
-      questionText:
-          'A sum of money at simple interest amounts to Rs. 815 in 3 years and to Rs. 854 in 4 years. The sum is:',
-      options: ['Rs. 650', 'Rs. 690', 'Rs. 698', 'Rs. 700'],
-      explanation:
-          'Interest for 1 year = Rs. (854 - 815) = Rs. 39. Interest for 3 years = Rs. (39 x 3) = Rs. 117. Principal = Rs. (815 - 117) = Rs. 698.',
-    ),
-    QuizQuestion(
-      id: 3,
-      questionText:
-          'The simple interest on a certain sum of money for 2(1/2) years at 12% per annum is Rs. 40 less than the simple interest on the same sum for 3(1/2) years at 10% per annum. Find the sum.',
-      options: ['Rs. 800', 'Rs. 600', 'Rs. 750', 'Rs. 900'],
-      explanation:
-          'Let the sum be x. Then, (x * 10 * 3.5)/100 - (x * 12 * 2.5)/100 = 40. Solving for x gives Rs. 800.',
-    ),
-    QuizQuestion(
-      id: 4,
-      questionText:
-          'A, B and C can do a piece of work in 20, 30 and 60 days respectively. In how many days can A do the work if he is assisted by B and C on every third day?',
-      options: ['12 days', '15 days', '16 days', '18 days'],
-      explanation:
-          'A\'s 2 days work = 2/20 = 1/10. (A+B+C)\'s 1 day work = 1/20 + 1/30 + 1/60 = 6/60 = 1/10. 3 days work = 1/10 + 1/10 = 1/5. Hence work is done in 15 days.',
-    ),
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final quizState = ref.watch(quizProvider);
     final colors = context.zAppColors;
-    final activeQuestion = _questions[_currentQuestionIndex];
     final isDark = context.zIsDark;
+
+    if (quizState.isLoading) {
+      return Scaffold(
+        backgroundColor: colors.quizBackground,
+        body: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    final questions = quizState.questions;
+    final currentIdx = quizState.currentQuestionIndex;
+    final activeQuestion = questions[currentIdx];
+    final selectedIdx = quizState.selectedAnswers[activeQuestion.id];
+    final isAnswered = selectedIdx != null;
 
     return Scaffold(
       backgroundColor: colors.quizBackground,
@@ -103,7 +45,7 @@ class _QuizWebViewState extends ConsumerState<QuizWebView> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Top Banner with Title and Theme Toggle
+                // Top Banner with Title, Theme Toggle, Reset
                 Stack(
                   alignment: Alignment.center,
                   children: [
@@ -134,20 +76,43 @@ class _QuizWebViewState extends ConsumerState<QuizWebView> {
                     ),
                     Positioned(
                       right: 16,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: colors.optionBg,
-                        ),
-                        child: IconButton(
-                          icon: Icon(
-                            isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
-                            color: colors.bannerText,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          // Reset Quiz
+                          Container(
+                            margin: const EdgeInsets.only(right: 8),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: colors.optionBg,
+                            ),
+                            child: IconButton(
+                              icon: Icon(
+                                Icons.refresh_rounded,
+                                color: colors.bannerText,
+                              ),
+                              onPressed: () {
+                                ref.read(quizProvider.notifier).resetQuiz();
+                              },
+                            ),
                           ),
-                          onPressed: () {
-                            ref.read(themeModeProvider.notifier).toggle();
-                          },
-                        ),
+                          // Light/Dark Theme Mode Toggle
+                          Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: colors.optionBg,
+                            ),
+                            child: IconButton(
+                              icon: Icon(
+                                isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+                                color: colors.bannerText,
+                              ),
+                              onPressed: () {
+                                ref.read(themeModeProvider.notifier).toggle();
+                              },
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -229,19 +194,40 @@ class _QuizWebViewState extends ConsumerState<QuizWebView> {
                               ),
                               const SizedBox(height: 20),
 
-                              // Options Cards
-                              ...List.generate(activeQuestion.options.length, (index) {
+                              // Options Cards (with custom green/red selection feedback)
+                              ...List.generate(activeQuestion.options.length, (optionIdx) {
+                                final optionText = activeQuestion.options[optionIdx];
+
+                                Color cardBg = colors.optionBg;
+                                Color cardBorder = colors.optionBorder;
+                                Color textCol = colors.mainText;
+
+                                if (isAnswered) {
+                                  if (optionIdx == activeQuestion.correctOptionIndex) {
+                                    // Correct option background & green highlight text
+                                    cardBg = isDark ? const Color(0xFF14532D) : const Color(0xFFE8F5E9);
+                                    cardBorder = isDark ? const Color(0xFF22C55E) : const Color(0xFF81C784);
+                                    textCol = isDark ? const Color(0xFF86EFAC) : const Color(0xFF2E7D32);
+                                  } else if (optionIdx == selectedIdx) {
+                                    // Wrong selected background & red highlight text
+                                    cardBg = isDark ? const Color(0xFF7F1D1D) : const Color(0xFFFFEBEE);
+                                    cardBorder = isDark ? const Color(0xFFEF4444) : const Color(0xFFE57373);
+                                    textCol = isDark ? const Color(0xFFFCA5A5) : const Color(0xFFC62828);
+                                  } else {
+                                    // Faded out other incorrect options
+                                    cardBg = colors.optionBg.withValues(alpha: 0.4);
+                                    cardBorder = colors.optionBorder.withValues(alpha: 0.4);
+                                    textCol = colors.mainText.withValues(alpha: 0.4);
+                                  }
+                                }
+
                                 return Container(
                                   margin: const EdgeInsets.only(bottom: 12),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 20,
-                                    vertical: 16,
-                                  ),
                                   decoration: BoxDecoration(
-                                    color: colors.optionBg,
+                                    color: cardBg,
                                     borderRadius: BorderRadius.circular(12),
                                     border: Border.all(
-                                      color: colors.optionBorder,
+                                      color: cardBorder,
                                       width: 1,
                                     ),
                                     boxShadow: [
@@ -252,12 +238,31 @@ class _QuizWebViewState extends ConsumerState<QuizWebView> {
                                       ),
                                     ],
                                   ),
-                                  child: Text(
-                                    activeQuestion.options[index],
-                                    style: TextStyle(
-                                      fontSize: 15,
-                                      color: colors.mainText,
-                                      fontWeight: FontWeight.w500,
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      onTap: isAnswered
+                                          ? null
+                                          : () {
+                                              ref
+                                                  .read(quizProvider.notifier)
+                                                  .selectAnswer(activeQuestion.id, optionIdx);
+                                            },
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 20,
+                                          vertical: 16,
+                                        ),
+                                        child: Text(
+                                          optionText,
+                                          style: TextStyle(
+                                            fontSize: 15,
+                                            color: textCol,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 );
@@ -269,65 +274,66 @@ class _QuizWebViewState extends ConsumerState<QuizWebView> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   _buildNavigationButton('Prev', () {
-                                    if (_currentQuestionIndex > 0) {
-                                      setState(() {
-                                        _currentQuestionIndex--;
-                                      });
+                                    if (currentIdx > 0) {
+                                      ref
+                                          .read(quizProvider.notifier)
+                                          .setCurrentQuestionIndex(currentIdx - 1);
                                     }
                                   }),
                                   const SizedBox(width: 40),
                                   _buildNavigationButton('Next', () {
-                                    if (_currentQuestionIndex < _questions.length - 1) {
-                                      setState(() {
-                                        _currentQuestionIndex++;
-                                      });
+                                    if (currentIdx < questions.length - 1) {
+                                      ref
+                                          .read(quizProvider.notifier)
+                                          .setCurrentQuestionIndex(currentIdx + 1);
                                     }
                                   }),
                                 ],
                               ),
                               const SizedBox(height: 24),
 
-                              // Explanation Section Box
-                              Container(
-                                padding: const EdgeInsets.all(20),
-                                decoration: BoxDecoration(
-                                  color: colors.quizCardBg,
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: colors.optionBorder,
-                                    width: 1,
+                              // Explanation Section Box (only shown once answered)
+                              if (isAnswered)
+                                Container(
+                                  padding: const EdgeInsets.all(20),
+                                  decoration: BoxDecoration(
+                                    color: colors.quizCardBg,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: colors.optionBorder,
+                                      width: 1,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.03),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 4),
+                                      ),
+                                    ],
                                   ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.03),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                  ],
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Explanation',
-                                      style: TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.bold,
-                                        color: colors.mainText,
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Explanation',
+                                        style: TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.bold,
+                                          color: colors.mainText,
+                                        ),
                                       ),
-                                    ),
-                                    const SizedBox(height: 10),
-                                    Text(
-                                      activeQuestion.explanation,
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        height: 1.4,
-                                        color: colors.subText,
+                                      const SizedBox(height: 10),
+                                      Text(
+                                        activeQuestion.explanation,
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          height: 1.4,
+                                          color: colors.subText,
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
-                              ),
                             ],
                           ),
                         ),
@@ -354,7 +360,7 @@ class _QuizWebViewState extends ConsumerState<QuizWebView> {
                                 children: [
                                   Expanded(
                                     child: Text(
-                                      'Question ${activeQuestion.id}/${_questions.length}',
+                                      'Question ${activeQuestion.id}/${questions.length}',
                                       style: TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.w600,
@@ -374,7 +380,7 @@ class _QuizWebViewState extends ConsumerState<QuizWebView> {
                               ),
                               const SizedBox(height: 24),
 
-                              // Grid of numbered circles (1 to 20)
+                              // Grid of numbered circles (1 to 20) with active indicators and answered states
                               GridView.builder(
                                 shrinkWrap: true,
                                 physics: const NeverScrollableScrollPhysics(),
@@ -385,25 +391,34 @@ class _QuizWebViewState extends ConsumerState<QuizWebView> {
                                   mainAxisSpacing: 16,
                                   childAspectRatio: 1.0,
                                 ),
-                                itemCount: 20,
+                                itemCount: questions.length,
                                 itemBuilder: (context, index) {
                                   final num = index + 1;
+                                  final q = questions[index];
+                                  final ansIdx = quizState.selectedAnswers[q.id];
+                                  final isQAnswered = ansIdx != null;
 
-                                  // Grid circle color logic matching the exact reference image
+                                  // Grid circle color logic matching active, answered (correct/incorrect) or default designs
                                   Color circleBg;
                                   Color textCol = Colors.white;
 
-                                  if (num <= 10) {
-                                    circleBg = isDark ? const Color(0xFF3B82F6) : const Color(0xFFB3C5FF);
-                                  } else if (num == 11) {
-                                    circleBg = isDark ? const Color(0xFFEF4444) : const Color(0xFFFFA3A3);
+                                  if (isQAnswered) {
+                                    // Highlight answered question selector circle (Green if correct selection, Red if incorrect selection)
+                                    final isCorrect = ansIdx == q.correctOptionIndex;
+                                    circleBg = isCorrect ? const Color(0xFF4CAF50) : const Color(0xFFF44336);
                                   } else {
-                                    circleBg = isDark ? const Color(0xFF475569) : const Color(0xFFCCCCCC);
-                                    textCol = isDark ? const Color(0xFFCBD5E1) : const Color(0xFF555555);
+                                    if (num <= 10) {
+                                      circleBg = isDark ? const Color(0xFF2E4BB0) : const Color(0xFFB3C5FF);
+                                    } else if (num == 11) {
+                                      circleBg = isDark ? const Color(0xFFC53030) : const Color(0xFFFFA3A3);
+                                    } else {
+                                      circleBg = isDark ? const Color(0xFF475569) : const Color(0xFFCCCCCC);
+                                      textCol = isDark ? const Color(0xFFCBD5E1) : const Color(0xFF555555);
+                                    }
                                   }
 
                                   // Highlight the currently active question index with a border
-                                  final isActive = num == activeQuestion.id;
+                                  final isActive = index == currentIdx;
 
                                   return Container(
                                     decoration: BoxDecoration(
@@ -423,13 +438,25 @@ class _QuizWebViewState extends ConsumerState<QuizWebView> {
                                         ),
                                       ],
                                     ),
-                                    alignment: Alignment.center,
-                                    child: Text(
-                                      '$num',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                        color: textCol,
+                                    child: Material(
+                                      color: Colors.transparent,
+                                      child: InkWell(
+                                        onTap: () {
+                                          ref
+                                              .read(quizProvider.notifier)
+                                              .setCurrentQuestionIndex(index);
+                                        },
+                                        borderRadius: BorderRadius.circular(100),
+                                        child: Center(
+                                          child: Text(
+                                            '$num',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.bold,
+                                              color: textCol,
+                                            ),
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   );

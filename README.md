@@ -1,17 +1,24 @@
 # WebQuiz
 
-WebQuiz is a modern, premium, and fully responsive quiz application built using the Flutter framework. It provides a pixel-perfect, high-fidelity layout optimized for both large desktop/web viewports and compact mobile devices.
+WebQuiz is a modern, premium, and fully responsive quiz application built using the Flutter framework. It provides a pixel-perfect, high-fidelity layout optimized for large desktop/web viewports and compact mobile screens.
 
 ---
 
 ## 🚀 Key Features
 
-*   **Vibrant User Interface**: Matches modern Material 3 specifications with a gorgeous blue background and clean glassmorphism patterns.
+*   **Vibrant User Interface**: Modern Material 3 specifications with a gorgeous, high-fidelity HSL/RGB palette and glassmorphism.
 *   **Fully Responsive Layout**:
     *   **Desktop/Web view**: Uses a split-pane layout with the quiz card on the left and a 20-question navigation grid on the right.
-    *   **Mobile view**: Automatically stacks vertically and formats navigation circles into a compact grid to prevent overflows.
-*   **Interactive Simulation**: Supports fluid question navigation, explanation overlays, and interactive multi-choice selections.
-*   **Dynamic Theme Toggle**: Clean light/dark mode switcher powered by Riverpod state hooks.
+    *   **Mobile view**: Stacks views vertically and formats navigation circles into a scrollable/compact grid.
+*   **Interactive Simulation**:
+    *   Fluid question-by-question navigation (Next and Prev actions).
+    *   Jump-to-question navigation by clicking/tapping index circles in the progress grid.
+    *   Instant feedback with explanation overlays once an option is selected.
+*   **Interactive Progress Tracker**:
+    *   Visual progress indicator for answered/unanswered states.
+    *   Question selector circles highlight as **Green** (for correct answers) or **Red** (for incorrect answers) based on the user's choices.
+*   **Dynamic Theme Toggle**: Quick light/dark mode switcher powered by a generated Riverpod state notifier.
+*   **Progress Persistence**: Automatically caches selection choices locally; answers are locked upon submission and retained across hot restarts.
 
 ---
 
@@ -22,14 +29,14 @@ WebQuiz is a modern, premium, and fully responsive quiz application built using 
 | **Flutter SDK** | Cross-platform UI toolkit targeting Web and Mobile viewports. |
 | **Riverpod (v3)** | Modern reactive state management using code generation (`riverpod_generator`). |
 | **GoRouter (v17)** | Declarative path-based web routing configuration. |
-| **Shared Preferences** | Local key-value database interface for persistent client storage. |
+| **Shared Preferences** | Persistent storage client used to save and retrieve user quiz responses. |
 | **Build Runner** | Code-generation toolchain for generating Riverpod providers. |
 
 ---
 
-## 📐 Architecture
+## 📐 Clean Architecture & Directory Structure
 
-The codebase follows a structured, modular **Clean Architecture** directory scheme:
+The project has been refactored into a structured, modular **Clean Architecture** directory scheme:
 
 ```
 lib/
@@ -43,7 +50,18 @@ lib/
     │   ├── themes/          # Custom light and dark ThemeData configurations
     │   └── typography/      # TextTheme properties optimized for multiple screens
     ├── features/            # Feature-sliced domain features
-    │   └── quiz_home/       # Quiz feature slice containing views and notifiers
+    │   └── quiz_home/       # Quiz feature slice following Clean Architecture:
+    │       ├── data/        # Data Layer
+    │       │   ├── datasources/   # Handles local storage (SharedPreferences) and static mock questions data
+    │       │   ├── models/        # Data models mapping raw formats to domain entities
+    │       │   └── repositories/  # Implementations of domain repository interfaces
+    │       ├── domain/      # Domain Layer (Pure Business Logic)
+    │       │   ├── entities/      # Core business entities (QuizQuestion)
+    │       │   ├── repositories/  # Repository contracts/interfaces
+    │       │   └── usecases/      # Single-responsibility use cases (GetQuestions, SaveAnswer, ResetQuiz, etc.)
+    │       └── presentation/# Presentation Layer
+    │           ├── controller/    # State notifiers managing UI logic and state (QuizNotifier, ThemeModeNotifier)
+    │           └── view/          # Responsive widgets (QuizWebView, QuizMobileView)
     ├── outer_layer/         # Core system infrastructure and routing layers
     │   ├── clients/         # Storage and network API clients
     │   ├── routing/         # GoRouter path declarations
@@ -53,20 +71,61 @@ lib/
 
 ---
 
-## ⚡ State Management
+## ⚡ State Management & Use Cases
 
-State is handled using the new **Riverpod v3 code generation** standard.
-Legacy providers have been fully replaced with generated notifiers to ensure compile-time safety and optimal performance.
+State is handled using the new **Riverpod v3 code generation** standard. Use cases act as the entry point for the presentation layer to interact with the repository:
 
-Example implementation for toggling application themes:
+### 1. Domain Use Case Example
+Each business action is encapsulated in a dedicated use case class, keeping logic isolated and testable:
+```dart
+class SaveAnswerUseCase {
+  const SaveAnswerUseCase(this._repository);
+
+  final QuizRepository _repository;
+
+  Future<void> call(int questionId, int optionIndex) {
+    return _repository.saveAnswer(questionId, optionIndex);
+  }
+}
+```
+
+### 2. Riverpod Quiz State Notifier
+The `QuizNotifier` coordinates these use cases, managing the state transitions and reloading progress on start:
 ```dart
 @riverpod
-class ThemeModeNotifier extends _$ThemeModeNotifier {
+class QuizNotifier extends _$QuizNotifier {
   @override
-  ThemeMode build() => ThemeMode.light;
+  QuizState build() {
+    final state = QuizState(
+      currentQuestionIndex: 0,
+      selectedAnswers: const {},
+      questions: const [],
+      isLoading: true,
+    );
+    _initQuizState();
+    return state;
+  }
 
-  void toggle() {
-    state = state == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
+  Future<void> _initQuizState() async {
+    final questions = await ref.read(getQuestionsUseCaseProvider).call();
+    final savedAnswers = await ref.read(getSavedAnswersUseCaseProvider).call();
+
+    state = QuizState(
+      currentQuestionIndex: 0,
+      selectedAnswers: savedAnswers,
+      questions: questions,
+      isLoading: false,
+    );
+  }
+
+  Future<void> selectAnswer(int questionId, int optionIndex) async {
+    if (state.selectedAnswers.containsKey(questionId)) return;
+
+    await ref.read(saveAnswerUseCaseProvider).call(questionId, optionIndex);
+
+    final updatedAnswers = Map<int, int>.from(state.selectedAnswers);
+    updatedAnswers[questionId] = optionIndex;
+    state = state.copyWith(selectedAnswers: updatedAnswers);
   }
 }
 ```
@@ -100,7 +159,8 @@ flutter run            # For Mobile / Desktop devices
 ```
 
 ### 5. Run Tests
-Verify widget layouts and execution flows:
+Verify widget layouts, navigation events, and state mutations:
 ```bash
 flutter test
 ```
+The testing suite includes viewport simulation tests for desktop and mobile layouts, simulating real-user answer selection, verification flow, and progress overrides.

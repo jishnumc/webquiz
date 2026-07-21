@@ -18,12 +18,13 @@ Future<ProviderContainer> bootstrap() async {
   final sharedPref = await SharedPreferences.getInstance();
 
   // Create ProviderContainer with overrides
-  final container = ProviderContainer(
-    overrides: [sharedPreferencesProvider.overrideWithValue(sharedPref)],
-    observers: [const AppProviderObserver()],
-  );
-  // Read required providers so that they initialize correctly
-  // ..read(storageClientProvider);
+  final container =
+      ProviderContainer(
+          overrides: [sharedPreferencesProvider.overrideWithValue(sharedPref)],
+          observers: [const AppProviderObserver()],
+        )
+        // Read required providers so that they initialize correctly
+        ..read(storageClientProvider);
   // ..read(settingsRepositoryProvider);
 
   return container;
