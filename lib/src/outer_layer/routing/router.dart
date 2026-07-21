@@ -1,7 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:webquiz/src/features/quiz_home/presentation/view/quiz_web_view.dart';
+import 'package:webquiz/src/features/quiz_home/presentation/view/quiz_home.dart';
 
 part 'router.g.dart';
 
@@ -17,7 +17,7 @@ class WebQuizRouter implements RouterConfig<Object> {
           routes: [
             GoRoute(
               path: '/',
-              builder: (context, state) => const QuizWebView(),
+              builder: (context, state) => const QuizHome(),
             ),
           ],
         );
