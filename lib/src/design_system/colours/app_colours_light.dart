@@ -22,5 +22,16 @@ class AppColorsLight extends AppColors {
         surface: const Color(0xFFFFFBFE),
         onSurface: const Color(0xFF1C1B1F),
         outline: const Color(0xFF79747E),
+        quizBackground: const Color(0xFF3884FD),
+        quizCardBg: Colors.white,
+        bannerBg: Colors.white,
+        bannerText: const Color(0xFFF35C5C),
+        mainText: const Color(0xFF333333),
+        subText: const Color(0xFF444444),
+        questionBoxBg: const Color(0xFFF8FAFF),
+        questionBoxBorder: const Color(0xFFC2D6FF),
+        optionBg: Colors.white,
+        optionBorder: const Color(0xFFEEEEEE),
+        dividerColor: const Color(0xFFEEEEEE),
       );
 }

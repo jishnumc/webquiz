@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:webquiz/src/features/quiz_home/presentation/view/quiz_web_view.dart'; // import QuizQuestion model if needed
+import 'package:webquiz/src/design_system/design_system.dart';
+import 'package:webquiz/src/features/quiz_home/presentation/view/quiz_web_view.dart';
 
-/// The mobile-optimized view of the quiz application.
+/// The mobile-optimized view of the quiz application with full dark theme support.
 class QuizMobileView extends ConsumerStatefulWidget {
   /// Creates the [QuizMobileView].
   const QuizMobileView({super.key});
@@ -14,7 +15,6 @@ class QuizMobileView extends ConsumerStatefulWidget {
 class _QuizMobileViewState extends ConsumerState<QuizMobileView> {
   int _currentQuestionIndex = 0;
 
-  // Exact same mock questions list to ensure design parity
   final List<QuizQuestion> _questions = const [
     QuizQuestion(
       id: 1,
@@ -48,84 +48,78 @@ class _QuizMobileViewState extends ConsumerState<QuizMobileView> {
       explanation:
           'A\'s 2 days work = 2/20 = 1/10. (A+B+C)\'s 1 day work = 1/20 + 1/30 + 1/60 = 6/60 = 1/10. 3 days work = 1/10 + 1/10 = 1/5. Hence work is done in 15 days.',
     ),
-    QuizQuestion(
-      id: 5,
-      questionText:
-          'A and B take turns rolling a fair six-sided die. The first person to roll a 6 wins. If A rolls first, what is the probability that A wins?',
-      options: ['1/6', '5/6', '6/11', '5/11'],
-      explanation:
-          'P(A wins) = P(wins on 1st roll) + P(wins on 3rd roll) + ... = 1/6 + (5/6 * 5/6 * 1/6) + ... = (1/6) / (1 - 25/36) = 6/11.',
-    ),
-    QuizQuestion(
-      id: 6,
-      questionText:
-          'A card is drawn from a pack of 52 cards. The probability of getting a queen of club or a king of heart is:',
-      options: ['1/13', '2/13', '1/26', '1/52'],
-      explanation:
-          'P(Queen of Club or King of Heart) = P(Queen of Club) + P(King of Heart) = 1/52 + 1/52 = 2/52 = 1/26.',
-    ),
-    QuizQuestion(
-      id: 7,
-      questionText:
-          'How many three-letter words can be formed from the letters of the word \'SQUARE\' without repetition?',
-      options: ['60', '120', '180', '240'],
-      explanation:
-          'The number of letters in SQUARE is 6. Number of 3-letter words = 6P3 = 6 * 5 * 4 = 120.',
-    ),
-    QuizQuestion(
-      id: 8,
-      questionText:
-          'Out of 7 consonants and 4 vowels, how many words of 3 consonants and 2 vowels can be formed?',
-      options: ['210', '25200', '24400', '21300'],
-      explanation:
-          'Number of ways of selecting 3 consonants = 7C3 = 35. Number of ways of selecting 2 vowels = 4C2 = 6. Number of ways of selecting letters = 35 * 6 = 210. Total words = 210 * 5! = 25200.',
-    ),
   ];
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.zAppColors;
+    final isDark = context.zIsDark;
     final activeQuestion = _questions[_currentQuestionIndex];
 
     return Scaffold(
-      backgroundColor: const Color(0xFF3884FD), // Match exact blue background
+      backgroundColor: colors.quizBackground,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Banner header: "Quiz Application UI" (tighter width for mobile)
-              Container(
+              // Top Banner with Title and Theme Toggle
+              Stack(
                 alignment: Alignment.center,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                margin: const EdgeInsets.only(bottom: 20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 8,
-                      offset: const Offset(0, 3),
+                children: [
+                  Container(
+                    alignment: Alignment.center,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    decoration: BoxDecoration(
+                      color: colors.bannerBg,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                child: const Text(
-                  'Quiz Application UI',
-                  style: TextStyle(
-                    color: Color(0xFFF35C5C),
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 0.5,
+                    child: Text(
+                      'Quiz Application UI',
+                      style: TextStyle(
+                        color: colors.bannerText,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
                   ),
-                ),
+                  Positioned(
+                    right: 12,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: colors.optionBg,
+                      ),
+                      child: IconButton(
+                        iconSize: 20,
+                        icon: Icon(
+                          isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+                          color: colors.bannerText,
+                        ),
+                        onPressed: () {
+                          ref.read(themeModeProvider.notifier).toggle();
+                        },
+                      ),
+                    ),
+                  ),
+                ],
               ),
+              const SizedBox(height: 20),
 
               // Main container card stacked vertically for mobile
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: colors.quizCardBg,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
@@ -138,24 +132,24 @@ class _QuizMobileViewState extends ConsumerState<QuizMobileView> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Grid header row at the top of the card
+                    // Grid header row
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
                           'Question ${activeQuestion.id}/${_questions.length}',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
-                            color: Color(0xFF333333),
+                            color: colors.mainText,
                           ),
                         ),
-                        const Text(
+                        Text(
                           'Need Help ?',
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
-                            color: Color(0xFF7B8FA1),
+                            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF7B8FA1),
                           ),
                         ),
                       ],
@@ -180,12 +174,12 @@ class _QuizMobileViewState extends ConsumerState<QuizMobileView> {
                         Color textCol = Colors.white;
 
                         if (num <= 10) {
-                          circleBg = const Color(0xFFB3C5FF);
+                          circleBg = isDark ? const Color(0xFF3B82F6) : const Color(0xFFB3C5FF);
                         } else if (num == 11) {
-                          circleBg = const Color(0xFFFFA3A3);
+                          circleBg = isDark ? const Color(0xFFEF4444) : const Color(0xFFFFA3A3);
                         } else {
-                          circleBg = const Color(0xFFCCCCCC);
-                          textCol = const Color(0xFF555555);
+                          circleBg = isDark ? const Color(0xFF475569) : const Color(0xFFCCCCCC);
+                          textCol = isDark ? const Color(0xFFCBD5E1) : const Color(0xFF555555);
                         }
 
                         final isActive = num == activeQuestion.id;
@@ -220,14 +214,14 @@ class _QuizMobileViewState extends ConsumerState<QuizMobileView> {
                     ),
 
                     // Quiz Title
-                    const Align(
+                    Align(
                       alignment: Alignment.center,
                       child: Text(
                         'Quiz Title',
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF333333),
+                          color: colors.mainText,
                         ),
                       ),
                     ),
@@ -237,10 +231,10 @@ class _QuizMobileViewState extends ConsumerState<QuizMobileView> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF8FAFF),
+                        color: colors.questionBoxBg,
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
-                          color: const Color(0xFFC2D6FF),
+                          color: colors.questionBoxBorder,
                           width: 1.2,
                         ),
                       ),
@@ -249,19 +243,19 @@ class _QuizMobileViewState extends ConsumerState<QuizMobileView> {
                         children: [
                           Text(
                             'Question ${activeQuestion.id}',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF222222),
+                              color: colors.mainText,
                             ),
                           ),
                           const SizedBox(height: 8),
                           Text(
                             activeQuestion.questionText,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 13.5,
                               height: 1.35,
-                              color: Color(0xFF444444),
+                              color: colors.subText,
                             ),
                           ),
                         ],
@@ -278,10 +272,10 @@ class _QuizMobileViewState extends ConsumerState<QuizMobileView> {
                           vertical: 12,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: colors.optionBg,
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
-                            color: const Color(0xFFEEEEEE),
+                            color: colors.optionBorder,
                             width: 1,
                           ),
                           boxShadow: [
@@ -294,9 +288,9 @@ class _QuizMobileViewState extends ConsumerState<QuizMobileView> {
                         ),
                         child: Text(
                           activeQuestion.options[index],
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13.5,
-                            color: Color(0xFF333333),
+                            color: colors.mainText,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -331,10 +325,10 @@ class _QuizMobileViewState extends ConsumerState<QuizMobileView> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: colors.quizCardBg,
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
-                          color: const Color(0xFFEEEEEE),
+                          color: colors.optionBorder,
                           width: 1,
                         ),
                         boxShadow: [
@@ -348,21 +342,21 @@ class _QuizMobileViewState extends ConsumerState<QuizMobileView> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
+                          Text(
                             'Explanation',
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF222222),
+                              color: colors.mainText,
                             ),
                           ),
                           const SizedBox(height: 8),
                           Text(
                             activeQuestion.explanation,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 13,
                               height: 1.35,
-                              color: Color(0xFF555555),
+                              color: colors.subText,
                             ),
                           ),
                         ],
@@ -379,36 +373,41 @@ class _QuizMobileViewState extends ConsumerState<QuizMobileView> {
   }
 
   Widget _buildNavigationButton(String label, VoidCallback onTap) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
+    return Builder(
+      builder: (context) {
+        final colors = context.zAppColors;
+        return Container(
+          decoration: BoxDecoration(
+            color: colors.optionBg,
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(8),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-            child: Text(
-              label,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF333333),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(8),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: colors.mainText,
+                  ),
+                ),
               ),
             ),
           ),
-        ),
-      ),
+        );
+      }
     );
   }
 }

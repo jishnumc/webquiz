@@ -20,6 +20,17 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.surface,
     required this.onSurface,
     required this.outline,
+    required this.quizBackground,
+    required this.quizCardBg,
+    required this.bannerBg,
+    required this.bannerText,
+    required this.mainText,
+    required this.subText,
+    required this.questionBoxBg,
+    required this.questionBoxBorder,
+    required this.optionBg,
+    required this.optionBorder,
+    required this.dividerColor,
   });
 
   /// The primary color.
@@ -61,6 +72,39 @@ class AppColors extends ThemeExtension<AppColors> {
   /// The outline color.
   final Color outline;
 
+  /// Quiz UI Background color
+  final Color quizBackground;
+
+  /// Quiz Main Card Background color
+  final Color quizCardBg;
+
+  /// Quiz Header Banner Background color
+  final Color bannerBg;
+
+  /// Quiz Header Banner Text color
+  final Color bannerText;
+
+  /// Quiz General Text color
+  final Color mainText;
+
+  /// Quiz Sub/Description Text color
+  final Color subText;
+
+  /// Quiz Question Box Background color
+  final Color questionBoxBg;
+
+  /// Quiz Question Box Border color
+  final Color questionBoxBorder;
+
+  /// Quiz Option Card Background color
+  final Color optionBg;
+
+  /// Quiz Option Card Border color
+  final Color optionBorder;
+
+  /// Quiz Divider/Border color
+  final Color dividerColor;
+
   @override
   AppColors copyWith({
     Color? primary,
@@ -76,6 +120,17 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? surface,
     Color? onSurface,
     Color? outline,
+    Color? quizBackground,
+    Color? quizCardBg,
+    Color? bannerBg,
+    Color? bannerText,
+    Color? mainText,
+    Color? subText,
+    Color? questionBoxBg,
+    Color? questionBoxBorder,
+    Color? optionBg,
+    Color? optionBorder,
+    Color? dividerColor,
   }) {
     return AppColors(
       primary: primary ?? this.primary,
@@ -91,6 +146,17 @@ class AppColors extends ThemeExtension<AppColors> {
       surface: surface ?? this.surface,
       onSurface: onSurface ?? this.onSurface,
       outline: outline ?? this.outline,
+      quizBackground: quizBackground ?? this.quizBackground,
+      quizCardBg: quizCardBg ?? this.quizCardBg,
+      bannerBg: bannerBg ?? this.bannerBg,
+      bannerText: bannerText ?? this.bannerText,
+      mainText: mainText ?? this.mainText,
+      subText: subText ?? this.subText,
+      questionBoxBg: questionBoxBg ?? this.questionBoxBg,
+      questionBoxBorder: questionBoxBorder ?? this.questionBoxBorder,
+      optionBg: optionBg ?? this.optionBg,
+      optionBorder: optionBorder ?? this.optionBorder,
+      dividerColor: dividerColor ?? this.dividerColor,
     );
   }
 
@@ -129,6 +195,17 @@ class AppColors extends ThemeExtension<AppColors> {
       surface: Color.lerp(surface, other.surface, t)!,
       onSurface: Color.lerp(onSurface, other.onSurface, t)!,
       outline: Color.lerp(outline, other.outline, t)!,
+      quizBackground: Color.lerp(quizBackground, other.quizBackground, t)!,
+      quizCardBg: Color.lerp(quizCardBg, other.quizCardBg, t)!,
+      bannerBg: Color.lerp(bannerBg, other.bannerBg, t)!,
+      bannerText: Color.lerp(bannerText, other.bannerText, t)!,
+      mainText: Color.lerp(mainText, other.mainText, t)!,
+      subText: Color.lerp(subText, other.subText, t)!,
+      questionBoxBg: Color.lerp(questionBoxBg, other.questionBoxBg, t)!,
+      questionBoxBorder: Color.lerp(questionBoxBorder, other.questionBoxBorder, t)!,
+      optionBg: Color.lerp(optionBg, other.optionBg, t)!,
+      optionBorder: Color.lerp(optionBorder, other.optionBorder, t)!,
+      dividerColor: Color.lerp(dividerColor, other.dividerColor, t)!,
     );
   }
 }
