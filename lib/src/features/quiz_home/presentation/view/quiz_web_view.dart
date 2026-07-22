@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:webquiz/src/design_system/design_system.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 import '../notifiers/quiz_notifier.dart';
 import '../widgets/connected_question_grid.dart';
 import '../widgets/connected_quiz_banner.dart';
@@ -22,27 +23,24 @@ class _QuizWebViewState extends ConsumerState<QuizWebView> {
     final colors = context.zAppColors;
     final isDark = context.zIsDark;
 
-    if (quizState.isLoading) {
-      return Scaffold(
-        backgroundColor: colors.quizBackground,
-        body: const Center(child: CircularProgressIndicator()),
-      );
-    }
-
     final questions = quizState.questions;
     final currentIdx = quizState.currentQuestionIndex;
-    final activeQuestion = questions[currentIdx];
+    final activeQuestion = questions.isNotEmpty
+        ? questions[currentIdx]
+        : QuizState.dummyQuestions[currentIdx];
 
     return Scaffold(
       backgroundColor: colors.quizBackground,
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 30),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1100),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
+      body: Skeletonizer(
+        enabled: quizState.isLoading,
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 30),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1100),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
                 // Top Banner with Title, Theme Toggle, Reset
                 const ConnectedQuizBanner(
                   width: 580,
@@ -138,6 +136,7 @@ class _QuizWebViewState extends ConsumerState<QuizWebView> {
           ),
         ),
       ),
-    );
+    ),
+  );
   }
 }

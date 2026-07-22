@@ -1,4 +1,5 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:webquiz/src/outer_layer/clients/api_client.dart';
 import 'package:webquiz/src/outer_layer/clients/storage_client.dart';
 
 // Domain Imports
@@ -11,6 +12,8 @@ import '../../domain/usecases/reset_quiz_usecase.dart';
 
 // Data Imports
 import '../../data/datasources/quiz_local_data_source.dart';
+import '../../data/datasources/quiz_remote_data_source.dart';
+import '../../data/models/quiz_question_model.dart';
 import '../../data/repositories/quiz_repository_impl.dart';
 
 part 'quiz_notifier.g.dart';
@@ -21,10 +24,19 @@ QuizLocalDataSource quizLocalDataSource(Ref ref) {
   return QuizLocalDataSourceImpl(ref.watch(sharedPreferencesProvider));
 }
 
+/// Exposes the remote data source instance provider.
+@riverpod
+QuizRemoteDataSource quizRemoteDataSource(Ref ref) {
+  return QuizRemoteDataSourceImpl(ref.watch(apiClientProvider));
+}
+
 /// Exposes the Repository mapping contract implementation provider.
 @riverpod
 QuizRepository quizRepository(Ref ref) {
-  return QuizRepositoryImpl(ref.watch(quizLocalDataSourceProvider));
+  return QuizRepositoryImpl(
+    ref.watch(quizLocalDataSourceProvider),
+    ref.watch(quizRemoteDataSourceProvider),
+  );
 }
 
 /// Exposes the GetQuestionsUseCase provider.
@@ -73,6 +85,18 @@ class QuizState {
   /// State loading indicator.
   final bool isLoading;
 
+  /// Static list of dummy questions for skeletonizer placeholder rendering.
+  static final List<QuizQuestion> dummyQuestions = List.generate(
+    30,
+    (index) => QuizQuestionModel(
+      id: index + 1,
+      questionText: 'This is a placeholder question text that is quite long to show a realistic loading skeleton representation.',
+      options: const ['Option Placeholder A', 'Option Placeholder B', 'Option Placeholder C', 'Option Placeholder D'],
+      explanation: 'This is a placeholder explanation text for skeleton loading.',
+      correctOptionIndex: 0,
+    ),
+  );
+
   /// Returns a copy of this state with updated properties.
   QuizState copyWith({
     int? currentQuestionIndex,
@@ -98,7 +122,7 @@ class QuizNotifier extends _$QuizNotifier {
     final state = QuizState(
       currentQuestionIndex: 0,
       selectedAnswers: const {},
-      questions: const [],
+      questions: QuizState.dummyQuestions,
       isLoading: true,
     );
 
