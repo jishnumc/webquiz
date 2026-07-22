@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:webquiz/src/design_system/design_system.dart';
-import 'package:webquiz/src/features/quiz_home/presentation/controller/theme_notifier.dart';
+import 'package:webquiz/src/features/quiz_home/presentation/notifiers/theme_notifier.dart';
 import 'package:webquiz/src/outer_layer/routing/router.dart';
 
 /// The root application widget.
