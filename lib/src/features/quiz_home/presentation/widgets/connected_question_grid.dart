@@ -24,76 +24,76 @@ class ConnectedQuestionGrid extends ConsumerWidget {
       enabled: quizState.isLoading,
       child: QuestionGrid(
         itemCount: questions.length,
-      crossAxisCount: isMobile ? 10 : 5,
-      crossAxisSpacing: isMobile ? 6.0 : 10.0,
-      mainAxisSpacing: isMobile ? 8.0 : 16.0,
-      itemBuilder: (context, index) {
-        final num = index + 1;
-        final q = questions[index];
-        final ansIdx = quizState.selectedAnswers[q.id];
-        final isQAnswered = ansIdx != null;
+        maxCrossAxisExtent: isMobile ? 32.0 : 44.0,
+        crossAxisSpacing: isMobile ? 6.0 : 10.0,
+        mainAxisSpacing: isMobile ? 8.0 : 16.0,
+        itemBuilder: (context, index) {
+          final num = index + 1;
+          final q = questions[index];
+          final ansIdx = quizState.selectedAnswers[q.id];
+          final isQAnswered = ansIdx != null;
 
-        Color circleBg;
-        Color textCol = Colors.white;
+          Color circleBg;
+          Color textCol = Colors.white;
 
-        if (isQAnswered) {
-          final isCorrect = ansIdx == q.correctOptionIndex;
-          circleBg = isCorrect
-              ? const Color(0xFF4CAF50)
-              : const Color(0xFFF44336);
-        } else {
-          if (isMobile) {
-            if (num <= 10) {
-              circleBg = isDark
-                  ? const Color(0xFF3B82F6)
-                  : const Color(0xFFB3C5FF);
-            } else if (num == 11) {
-              circleBg = isDark
-                  ? const Color(0xFFEF4444)
-                  : const Color(0xFFFFA3A3);
-            } else {
-              circleBg = isDark
-                  ? const Color(0xFF475569)
-                  : const Color(0xFFCCCCCC);
-              textCol = isDark
-                  ? const Color(0xFFCBD5E1)
-                  : const Color(0xFF555555);
-            }
+          if (isQAnswered) {
+            final isCorrect = ansIdx == q.correctOptionIndex;
+            circleBg = isCorrect
+                ? const Color(0xFF4CAF50)
+                : const Color(0xFFF44336);
           } else {
-            if (num <= 10) {
-              circleBg = isDark
-                  ? const Color(0xFF2E4BB0)
-                  : const Color(0xFFB3C5FF);
-            } else if (num == 11) {
-              circleBg = isDark
-                  ? const Color(0xFFC53030)
-                  : const Color(0xFFFFA3A3);
+            if (isMobile) {
+              if (num <= 10) {
+                circleBg = isDark
+                    ? const Color(0xFF3B82F6)
+                    : const Color(0xFFB3C5FF);
+              } else if (num == 11) {
+                circleBg = isDark
+                    ? const Color(0xFFEF4444)
+                    : const Color(0xFFFFA3A3);
+              } else {
+                circleBg = isDark
+                    ? const Color(0xFF475569)
+                    : const Color(0xFFCCCCCC);
+                textCol = isDark
+                    ? const Color(0xFFCBD5E1)
+                    : const Color(0xFF555555);
+              }
             } else {
-              circleBg = isDark
-                  ? const Color(0xFF475569)
-                  : const Color(0xFFCCCCCC);
-              textCol = isDark
-                  ? const Color(0xFFCBD5E1)
-                  : const Color(0xFF555555);
+              if (num <= 10) {
+                circleBg = isDark
+                    ? const Color(0xFF2E4BB0)
+                    : const Color(0xFFB3C5FF);
+              } else if (num == 11) {
+                circleBg = isDark
+                    ? const Color(0xFFC53030)
+                    : const Color(0xFFFFA3A3);
+              } else {
+                circleBg = isDark
+                    ? const Color(0xFF475569)
+                    : const Color(0xFFCCCCCC);
+                textCol = isDark
+                    ? const Color(0xFFCBD5E1)
+                    : const Color(0xFF555555);
+              }
             }
           }
-        }
 
-        final isActive = index == currentIdx;
+          final isActive = index == currentIdx;
 
-        return QuizCircleButton(
-          text: '$num',
-          backgroundColor: circleBg,
-          textColor: textCol,
-          isActive: isActive,
-          fontSize: isMobile ? 10.0 : 14.0,
-          borderWidth: isMobile ? 2.0 : 3.0,
-          onTap: () {
-            ref.read(quizProvider.notifier).setCurrentQuestionIndex(index);
-          },
-        );
-      },
-    ),
-  );
-}
+          return QuizCircleButton(
+            text: '$num',
+            backgroundColor: circleBg,
+            textColor: textCol,
+            isActive: isActive,
+            fontSize: isMobile ? 10.0 : 14.0,
+            borderWidth: isMobile ? 2.0 : 3.0,
+            onTap: () {
+              ref.read(quizProvider.notifier).setCurrentQuestionIndex(index);
+            },
+          );
+        },
+      ),
+    );
+  }
 }

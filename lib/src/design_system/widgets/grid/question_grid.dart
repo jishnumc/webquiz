@@ -5,7 +5,7 @@ class QuestionGrid extends StatelessWidget {
   /// Creates the [QuestionGrid].
   const QuestionGrid({
     required this.itemCount,
-    required this.crossAxisCount,
+    required this.maxCrossAxisExtent,
     required this.itemBuilder,
     this.crossAxisSpacing = 10.0,
     this.mainAxisSpacing = 16.0,
@@ -15,8 +15,8 @@ class QuestionGrid extends StatelessWidget {
   /// The total number of items to display.
   final int itemCount;
 
-  /// Number of columns in the grid.
-  final int crossAxisCount;
+  /// The maximum extent of each cell in the cross axis.
+  final double maxCrossAxisExtent;
 
   /// Builder function returning the circle button at the given index.
   final Widget Function(BuildContext, int) itemBuilder;
@@ -32,8 +32,8 @@ class QuestionGrid extends StatelessWidget {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
+      gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+        maxCrossAxisExtent: maxCrossAxisExtent,
         crossAxisSpacing: crossAxisSpacing,
         mainAxisSpacing: mainAxisSpacing,
         childAspectRatio: 1.0,
