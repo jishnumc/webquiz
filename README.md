@@ -8,17 +8,22 @@ WebQuiz is a modern, premium, and fully responsive quiz application built using 
 
 *   **Vibrant User Interface**: Modern Material 3 specifications with a gorgeous, high-fidelity HSL/RGB palette and glassmorphism.
 *   **Fully Responsive Layout**:
-    *   **Desktop/Web view**: Uses a split-pane layout with the quiz card on the left and a 20-question navigation grid on the right.
-    *   **Mobile view**: Stacks views vertically and formats navigation circles into a scrollable/compact grid.
+    *   **Desktop/Web view**: Uses a split-pane layout with the quiz card on the left and a dynamic question navigation grid on the right.
+    *   **Mobile view**: Stacks views vertically and formats navigation circles into a wrapping/compact grid.
 *   **Interactive Simulation**:
     *   Fluid question-by-question navigation (Next and Prev actions).
     *   Jump-to-question navigation by clicking/tapping index circles in the progress grid.
     *   Instant feedback with explanation overlays once an option is selected.
-*   **Interactive Progress Tracker**:
-    *   Visual progress indicator for answered/unanswered states.
-    *   Question selector circles highlight as **Green** (for correct answers) or **Red** (for incorrect answers) based on the user's choices.
+*   **Dynamic Layout Resize**: 
+    *   Progress grid column counts adjust dynamically using a `SliverGridDelegateWithMaxCrossAxisExtent` delegate so that buttons wrap cleanly instead of shrinking when the browser window width is resized.
+*   **Network API Integration**:
+    *   Fetches 30 high-fidelity multiple-choice questions from the **OpenTDB Trivia API** using a generated Chopper client.
+*   **Offline Local Fallback**:
+    *   Gracefully falls back to offline local questions (`mockQuestionsList`) under network failure, 404/500 API responses, or no-internet scenarios.
+*   **Premium Skeleton Loaders**:
+    *   Integrates **Skeletonizer** loading states at the individual component level (Banner, Card, Grid) to create a beautiful, modern transition as data loads.
 *   **Dynamic Theme Toggle**: Quick light/dark mode switcher powered by a generated Riverpod state notifier.
-*   **Progress Persistence**: Automatically caches selection choices locally; answers are locked upon submission and retained across hot restarts.
+*   **Progress Persistence**: Automatically caches selection choices locally using Hive database clients; answers are locked upon submission and retained across restarts.
 
 ---
 
@@ -27,16 +32,19 @@ WebQuiz is a modern, premium, and fully responsive quiz application built using 
 | Technology | Purpose |
 | :--- | :--- |
 | **Flutter SDK** | Cross-platform UI toolkit targeting Web and Mobile viewports. |
+| **Chopper Client** | Network HTTP client with built-in converters and logging interceptors. |
+| **Talker Logger** | High-fidelity console logging of HTTP queries and network exceptions. |
+| **Skeletonizer** | Modern placeholder loader system animating components during fetches. |
+| **Freezed & JSON Serializable** | Immutable model definition generation with JSON mapping helpers. |
 | **Riverpod (v3)** | Modern reactive state management using code generation (`riverpod_generator`). |
 | **GoRouter (v17)** | Declarative path-based web routing configuration. |
-| **Shared Preferences** | Persistent storage client used to save and retrieve user quiz responses. |
-| **Build Runner** | Code-generation toolchain for generating Riverpod providers. |
+| **Hive DB / SharedPreferences** | Fast local storage engines for state and answer persistence. |
 
 ---
 
 ## 📐 Clean Architecture & Directory Structure
 
-The project has been refactored into a structured, modular **Clean Architecture** directory scheme:
+The project follows a structured, modular **Clean Architecture** directory scheme:
 
 ```
 lib/
@@ -51,19 +59,20 @@ lib/
     │   └── typography/      # TextTheme properties optimized for multiple screens
     ├── features/            # Feature-sliced domain features
     │   └── quiz_home/       # Quiz feature slice following Clean Architecture:
-    │       ├── data/        # Data Layer
-    │       │   ├── datasources/   # Handles local storage (SharedPreferences) and static mock questions data
-    │       │   ├── models/        # Data models mapping raw formats to domain entities
-    │       │   └── repositories/  # Implementations of domain repository interfaces
+    │       ├── data/        # Data Layer (Remote API + Local Storage)
+    │       │   ├── datasources/   # Local Hive Storage and Remote Chopper datasource implementations
+    │       │   ├── models/        # Data models mapping raw responses via Freezed/JSON Serializable
+    │       │   └── repositories/  # Coordinator repositories handling local fallbacks
     │       ├── domain/      # Domain Layer (Pure Business Logic)
     │       │   ├── entities/      # Core business entities (QuizQuestion)
     │       │   ├── repositories/  # Repository contracts/interfaces
     │       │   └── usecases/      # Single-responsibility use cases (GetQuestions, SaveAnswer, ResetQuiz, etc.)
     │       └── presentation/# Presentation Layer
-    │           ├── controller/    # State notifiers managing UI logic and state (QuizNotifier, ThemeModeNotifier)
+    │           ├── notifiers/     # State notifiers managing UI logic (QuizNotifier, ThemeModeNotifier)
     │           └── view/          # Responsive widgets (QuizWebView, QuizMobileView)
     ├── outer_layer/         # Core system infrastructure and routing layers
-    │   ├── clients/         # Storage and network API clients
+    │   ├── clients/         # Storage (Hive) and Network API clients
+    │   ├── network/         # Chopper endpoints & custom JSON response converters
     │   ├── routing/         # GoRouter path declarations
     │   └── utils/           # Shared utility tools & provider observers
     └── system/              # System-level custom bindings (e.g., UI scaling)
@@ -90,7 +99,7 @@ class SaveAnswerUseCase {
 ```
 
 ### 2. Riverpod Quiz State Notifier
-The `QuizNotifier` coordinates these use cases, managing the state transitions and reloading progress on start:
+The `QuizNotifier` coordinates these use cases, managing the state transitions and loading remote questions with local fallback logic:
 ```dart
 @riverpod
 class QuizNotifier extends _$QuizNotifier {
@@ -99,7 +108,7 @@ class QuizNotifier extends _$QuizNotifier {
     final state = QuizState(
       currentQuestionIndex: 0,
       selectedAnswers: const {},
-      questions: const [],
+      questions: QuizState.dummyQuestions,
       isLoading: true,
     );
     _initQuizState();
@@ -116,16 +125,6 @@ class QuizNotifier extends _$QuizNotifier {
       questions: questions,
       isLoading: false,
     );
-  }
-
-  Future<void> selectAnswer(int questionId, int optionIndex) async {
-    if (state.selectedAnswers.containsKey(questionId)) return;
-
-    await ref.read(saveAnswerUseCaseProvider).call(questionId, optionIndex);
-
-    final updatedAnswers = Map<int, int>.from(state.selectedAnswers);
-    updatedAnswers[questionId] = optionIndex;
-    state = state.copyWith(selectedAnswers: updatedAnswers);
   }
 }
 ```
@@ -146,7 +145,7 @@ flutter pub get
 ```
 
 ### 3. Generate Code
-Generate code for Riverpod and other annotation bindings:
+Generate code for Freezed, JSON Serializer, Riverpod, and Chopper annotations:
 ```bash
 dart run build_runner build --delete-conflicting-outputs
 ```
@@ -159,7 +158,7 @@ flutter run            # For Mobile / Desktop devices
 ```
 
 ### 5. Run Tests
-Verify widget layouts, navigation events, and state mutations:
+Verify widget layouts, navigation events, API network fallbacks, and state mutations:
 ```bash
 flutter test
 ```
