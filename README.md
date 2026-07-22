@@ -131,35 +131,49 @@ class QuizNotifier extends _$QuizNotifier {
 
 ---
 
-## 💻 Getting Started
+## 💻 Technical Assessment Setup & Running
 
-To run the application locally, follow these steps:
+This project is built as a technical assessment submission. Follow the instructions below to clone, set up, and run the project locally.
 
-### 1. Prerequisite Setup
-Ensure you have the Flutter SDK installed on your system.
+### 1. Clone the Repository
+Clone this repository to your local machine and navigate into the project directory:
+```bash
+git clone <repository_url>
+cd webquiz
+```
 
-### 2. Fetch Dependencies
-Install package dependencies defined in the project:
+### 2. Prerequisite Setup
+Ensure you have the Flutter SDK installed on your system. This project is configured for Flutter SDK `^3.12.2`. Check your version:
+```bash
+flutter --version
+```
+
+### 3. Fetch Dependencies
+Fetch all package dependencies defined in `pubspec.yaml`:
 ```bash
 flutter pub get
 ```
 
-### 3. Generate Code
-Generate code for Freezed, JSON Serializer, Riverpod, and Chopper annotations:
+### 4. Code Generation
+Build Freezed model mappings, Chopper API client routes, and Riverpod provider observers:
 ```bash
 dart run build_runner build --delete-conflicting-outputs
 ```
 
-### 4. Run the Project
-Start the development server or run on your connected device:
-```bash
-flutter run -d chrome  # For Web browsers
-flutter run            # For Mobile / Desktop devices
-```
+### 5. Run the Application
+Run the project on your preferred browser or simulated device:
+*   **Web Interface (Chrome)**:
+    ```bash
+    flutter run -d chrome
+    ```
+*   **Mobile / Local Desktop Interface**:
+    ```bash
+    flutter run
+    ```
 
-### 5. Run Tests
-Verify widget layouts, navigation events, API network fallbacks, and state mutations:
+### 6. Run the Test Suite
+Validate the application's widget structures, navigation gestures, network fallback states, and persistence clients:
 ```bash
 flutter test
 ```
-The testing suite includes viewport simulation tests for desktop and mobile layouts, simulating real-user answer selection, verification flow, and progress overrides.
+The test suite compiles with zero errors and covers responsive layout constraints, interactive answer clicks, progress updates, and data conversion.
