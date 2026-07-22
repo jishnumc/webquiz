@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:webquiz/src/design_system/design_system.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 import '../notifiers/quiz_notifier.dart';
 
 /// A feature widget connecting the progress [QuestionGrid] and [QuizCircleButton] items to Riverpod state.
@@ -16,15 +17,13 @@ class ConnectedQuestionGrid extends ConsumerWidget {
     final quizState = ref.watch(quizProvider);
     final isDark = context.zIsDark;
 
-    if (quizState.isLoading) {
-      return const SizedBox.shrink();
-    }
-
     final questions = quizState.questions;
     final currentIdx = quizState.currentQuestionIndex;
 
-    return QuestionGrid(
-      itemCount: questions.length,
+    return Skeletonizer(
+      enabled: quizState.isLoading,
+      child: QuestionGrid(
+        itemCount: questions.length,
       crossAxisCount: isMobile ? 10 : 5,
       crossAxisSpacing: isMobile ? 6.0 : 10.0,
       mainAxisSpacing: isMobile ? 8.0 : 16.0,
@@ -94,6 +93,7 @@ class ConnectedQuestionGrid extends ConsumerWidget {
           },
         );
       },
-    );
-  }
+    ),
+  );
+}
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:webquiz/src/design_system/design_system.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 import '../notifiers/quiz_notifier.dart';
 import '../notifiers/theme_notifier.dart';
 
@@ -38,31 +39,35 @@ class ConnectedQuizBanner extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = context.zIsDark;
+    final isLoading = ref.watch(quizProvider.select((s) => s.isLoading));
 
-    return QuizBanner(
-      title: 'Quiz Application UI',
-      width: width,
-      padding: padding,
-      borderRadius: borderRadius,
-      titleFontSize: titleFontSize,
-      rightOffset: rightOffset,
-      actions: [
-        QuizIconButton(
-          icon: Icons.refresh_rounded,
-          iconSize: iconSize,
-          onPressed: () {
-            ref.read(quizProvider.notifier).resetQuiz();
-          },
-        ),
-        const SizedBox(width: 8),
-        QuizIconButton(
-          icon: isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
-          iconSize: iconSize,
-          onPressed: () {
-            ref.read(themeModeProvider.notifier).toggle();
-          },
-        ),
-      ],
+    return Skeletonizer(
+      enabled: isLoading,
+      child: QuizBanner(
+        title: 'Quiz Application UI',
+        width: width,
+        padding: padding,
+        borderRadius: borderRadius,
+        titleFontSize: titleFontSize,
+        rightOffset: rightOffset,
+        actions: [
+          QuizIconButton(
+            icon: Icons.refresh_rounded,
+            iconSize: iconSize,
+            onPressed: () {
+              ref.read(quizProvider.notifier).resetQuiz();
+            },
+          ),
+          const SizedBox(width: 8),
+          QuizIconButton(
+            icon: isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+            iconSize: iconSize,
+            onPressed: () {
+              ref.read(themeModeProvider.notifier).toggle();
+            },
+          ),
+        ],
+      ),
     );
   }
 }

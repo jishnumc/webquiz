@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:webquiz/src/design_system/design_system.dart';
-import 'package:skeletonizer/skeletonizer.dart';
 import '../notifiers/quiz_notifier.dart';
 import '../widgets/connected_question_grid.dart';
 import '../widgets/connected_quiz_banner.dart';
@@ -31,10 +30,8 @@ class _QuizMobileViewState extends ConsumerState<QuizMobileView> {
 
     return Scaffold(
       backgroundColor: colors.quizBackground,
-      body: Skeletonizer(
-        enabled: quizState.isLoading,
-        child: SafeArea(
-          child: SingleChildScrollView(
+      body: SafeArea(
+        child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -109,7 +106,6 @@ class _QuizMobileViewState extends ConsumerState<QuizMobileView> {
           ),
         ),
       ),
-    ),
-  );
+    );
   }
 }

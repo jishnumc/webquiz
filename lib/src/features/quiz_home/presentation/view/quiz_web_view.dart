@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:webquiz/src/design_system/design_system.dart';
-import 'package:skeletonizer/skeletonizer.dart';
 import '../notifiers/quiz_notifier.dart';
 import '../widgets/connected_question_grid.dart';
 import '../widgets/connected_quiz_banner.dart';
@@ -31,11 +30,9 @@ class _QuizWebViewState extends ConsumerState<QuizWebView> {
 
     return Scaffold(
       backgroundColor: colors.quizBackground,
-      body: Skeletonizer(
-        enabled: quizState.isLoading,
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 30),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 30),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 1100),
               child: Column(
@@ -136,7 +133,6 @@ class _QuizWebViewState extends ConsumerState<QuizWebView> {
           ),
         ),
       ),
-    ),
-  );
+    );
   }
 }

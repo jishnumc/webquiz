@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:webquiz/src/design_system/design_system.dart';
+import 'package:skeletonizer/skeletonizer.dart';
 import '../notifiers/quiz_notifier.dart';
 
 /// A feature widget connecting [QuestionCard], [OptionCard], [QuizNavButton], and [ExplanationCard] to Riverpod state.
@@ -17,17 +18,17 @@ class ConnectedQuizCard extends ConsumerWidget {
     final colors = context.zAppColors;
     final isDark = context.zIsDark;
 
-    if (quizState.isLoading) {
-      return const SizedBox.shrink();
-    }
-
     final questions = quizState.questions;
     final currentIdx = quizState.currentQuestionIndex;
-    final activeQuestion = questions[currentIdx];
+    final activeQuestion = questions.isNotEmpty
+        ? questions[currentIdx]
+        : QuizState.dummyQuestions[currentIdx];
     final selectedIdx = quizState.selectedAnswers[activeQuestion.id];
     final isAnswered = selectedIdx != null;
 
-    return Column(
+    return Skeletonizer(
+      enabled: quizState.isLoading,
+      child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // Quiz Title Header text
@@ -161,6 +162,7 @@ class ConnectedQuizCard extends ConsumerWidget {
             lineHeight: isMobile ? 1.35 : 1.4,
           ),
       ],
-    );
-  }
+    ),
+  );
+}
 }
